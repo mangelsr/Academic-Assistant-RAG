@@ -17,9 +17,11 @@ FastAPI Python backend powering the **University Academic Assistant**. The engin
 ## 📡 REST API Endpoints
 
 ### 1. Natural Language Academic Query
+
 - **`POST /api/v1/query`**
 - **Security**: Optional `X-API-Key` header & Rate Limiting (60 req/min).
 - **Request Body**:
+
   ```json
   {
     "query": "¿Cuáles son los temas evaluados en el primer parcial?",
@@ -28,7 +30,9 @@ FastAPI Python backend powering the **University Academic Assistant**. The engin
     "use_complex_model": false
   }
   ```
+
 - **Response**:
+
   ```json
   {
     "answer": "La evaluación del primer parcial comprende...",
@@ -49,14 +53,17 @@ FastAPI Python backend powering the **University Academic Assistant**. The engin
   ```
 
 ### 2. Academic Program / Careers List
+
 - **`GET /api/v1/careers`**
 - Returns list of indexed academic programs with course and chunk counts.
 
 ### 3. Ingestion Trigger
+
 - **`POST /api/v1/ingest`**
 - Ingests and vectorizes syllabus PDFs for a specific career directory.
 
 ### 4. Health Check
+
 - **`GET /health`**
 - Target group monitoring endpoint returning system status and mode (`local_dev` vs `production`).
 
@@ -65,6 +72,7 @@ FastAPI Python backend powering the **University Academic Assistant**. The engin
 ## 💻 Local Development Setup
 
 ### 1. Environment Setup
+
 ```bash
 # Create and activate Python virtual environment
 python3 -m venv .venv
@@ -75,13 +83,16 @@ pip install -r requirements.txt
 ```
 
 ### 2. Run Development Server
+
 ```bash
 # Set LOCAL_DEV_MODE=true to run with LocalVectorStore (no OpenSearch credentials needed)
 LOCAL_DEV_MODE=true uvicorn app.main:app --reload --port 8000
 ```
+
 Swagger API Documentation will be available at: `http://localhost:8000/docs`
 
 ### 3. Run Unit Tests
+
 ```bash
 pytest
 ```

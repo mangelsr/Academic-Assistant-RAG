@@ -5,7 +5,7 @@ from app.vectorstore.local_store import LocalVectorStore
 
 @pytest.mark.asyncio
 async def test_local_vectorstore_career_isolation():
-    store = LocalVectorStore()
+    store = LocalVectorStore(storage_path=None)
 
     # Index chunks for Career A (Computación)
     chunks_a = [
@@ -65,7 +65,7 @@ async def test_local_vectorstore_career_isolation():
 
 @pytest.mark.asyncio
 async def test_list_careers():
-    store = LocalVectorStore()
+    store = LocalVectorStore(storage_path=None)
     chunks = [
         {"chunk_id": "1", "career": "CI013"},
         {"chunk_id": "2", "career": "CI013"},
@@ -79,3 +79,36 @@ async def test_list_careers():
     career_map = {c["code"]: c["total_chunks"] for c in careers}
     assert career_map["CI013"] == 2
     assert career_map["LI004"] == 1
+
+
+@pytest.mark.asyncio
+async def test_local_vectorstore_persistence(tmp_path):
+    json_file = str(tmp_path / "test_vector_store.json")
+    store1 = LocalVectorStore(storage_path=json_file)
+
+    chunks = [
+        {
+            "chunk_id": "p1",
+            "text": "Inteligencia Artificial y Aprendizaje Automático",
+            "career": "CI013",
+            "course_name": "Inteligencia Artificial",
+        }
+    ]
+    vecs = [[0.5] * 256]
+    indexed_count = await store1.index_documents(chunks, vecs)
+    assert indexed_count == 1
+
+    # Instantiate a NEW store pointing to the same file
+    store2 = LocalVectorStore(storage_path=json_file)
+    assert len(store2.documents) == 1
+    assert store2.documents[0]["chunk_id"] == "p1"
+
+    # Search in store2 -> Should retrieve persisted document
+    results = await store2.similarity_search(
+        query_vector=vecs[0],
+        career="CI013",
+        top_k=5,
+    )
+    assert len(results) == 1
+    assert results[0]["chunk_id"] == "p1"
+

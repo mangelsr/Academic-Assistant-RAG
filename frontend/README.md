@@ -43,20 +43,25 @@ src/app/
 ## 🛠️ Getting Started & Commands
 
 ### 1. Install Dependencies
+
 ```bash
 pnpm install
 ```
 
 ### 2. Start Development Server
+
 ```bash
 pnpm start
 ```
+
 Navigate to `http://localhost:4200/`. The application will automatically reload when source files change.
 
 ### 3. Build for Production
+
 ```bash
 pnpm build
 ```
+
 Build artifacts will be stored in `dist/frontend` ready for deployment to Amazon S3 & CloudFront.
 
 ---

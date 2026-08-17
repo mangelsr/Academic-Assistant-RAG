@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # Local Development & Fallbacks
     LOCAL_DEV_MODE: bool = os.getenv("LOCAL_DEV_MODE", "true").lower() == "true"
+    LOCAL_STORAGE_PATH: str = os.getenv("LOCAL_STORAGE_PATH", "data/local_vector_store.json")
     OLLAMA_ENDPOINT: str = os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
     OLLAMA_EMBED_MODEL: str = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
     OLLAMA_GEN_MODEL: str = os.getenv("OLLAMA_GEN_MODEL", "llama3")
