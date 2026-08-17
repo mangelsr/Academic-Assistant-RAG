@@ -1,0 +1,30 @@
+{
+  "name": "espol-syllabus-downloader",
+  "version": "1.0.0",
+  "description": "Automated TypeScript Playwright crawler to download syllabus PDFs from ESPOL Malla Curricular",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "scrape": "tsx src/index.ts",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "keywords": [
+    "espol",
+    "playwright",
+    "syllabus",
+    "crawler",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "playwright": "^1.42.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
