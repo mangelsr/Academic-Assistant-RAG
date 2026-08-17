@@ -87,6 +87,24 @@ academic-assistant-rag/
 
 ## 🚀 Getting Started
 
+### Quick Start (One Command)
+
+To launch both the FastAPI backend and Angular frontend services concurrently:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+**Options:**
+
+- `./start.sh --docker` : Run backend via Docker Compose and frontend locally.
+- `./start.sh --backend-only` : Start only the FastAPI Python backend.
+- `./start.sh --frontend-only` : Start only the Angular SPA frontend.
+- `./start.sh --install` : Force reinstall virtualenv and node_modules dependencies.
+
+---
+
 ### Prerequisites
 
 - **Node.js**: `v24.x` or `v20.x`

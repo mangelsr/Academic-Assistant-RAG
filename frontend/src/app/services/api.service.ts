@@ -12,13 +12,11 @@ export class ApiService {
   private baseUrl = environment.apiBaseUrl;
 
   private getHeaders(): HttpHeaders {
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+    const apiKey = environment.apiKey || 'espol-secret-api-key';
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey
     });
-    if (environment.apiKey) {
-      headers = headers.set('X-API-Key', environment.apiKey);
-    }
-    return headers;
   }
 
   getCareers(): Observable<CareerListResponse> {
