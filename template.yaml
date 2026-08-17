@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  University Academic Assistant (Serverless RAG)
+  AWS SAM Template provisioning S3 Bucket, OpenSearch Serverless, Lambda Functions, and API Gateway.
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        AWS_REGION_NAME: !Ref AWS::Region
+        S3_BUCKET_NAME: !Ref SyllabiBucket
+        LOCAL_DEV_MODE: 'false'
+        BEDROCK_EMBEDDING_MODEL_ID: 'amazon.titan-embed-text-v2:0'
+        BEDROCK_GENERATION_MODEL_ID: 'anthropic.claude-3-haiku-20240307-v1:0'
+        BEDROCK_COMPLEX_MODEL_ID: 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+
+Resources:
+  # 1. Raw PDF Storage S3 Bucket
+  SyllabiBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'espol-academic-syllabi-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # 2. Amazon OpenSearch Serverless Vector Collection
+  VectorEncryptionPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: espol-vector-enc-policy
+      Type: encryption
+      Policy: !Sub |
+        {
+          "Rules": [
+            {
+              "ResourceType": "collection",
+              "Resource": ["collection/espol-syllabi-vectors"]
+            }
+          ],
+          "AWSOwnedKey": true
+        }
+
+  VectorNetworkPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: espol-vector-net-policy
+      Type: network
+      Policy: !Sub |
+        [
+          {
+            "Rules": [
+              {
+                "ResourceType": "collection",
+                "Resource": ["collection/espol-syllabi-vectors"]
+              },
+              {
+                "ResourceType": "dashboard",
+                "Resource": ["collection/espol-syllabi-vectors"]
+              }
+            ],
+            "AllowFromPublic": true
+          }
+        ]
+
+  SyllabiVectorCollection:
+    Type: AWS::OpenSearchServerless::Collection
+    DependsOn: [VectorEncryptionPolicy, VectorNetworkPolicy]
+    Properties:
+      Name: espol-syllabi-vectors
+      Type: VECTORSEARCH
+      Description: Vector store for ESPOL course syllabi and program content
+
+  # 3. Principle of Least Privilege IAM Roles
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AcademicAssistantRAGPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # S3 Access
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt SyllabiBucket.Arn
+                  - !Sub '${SyllabiBucket.Arn}/*'
+              # Bedrock Model Execution
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: '*'
+              # OpenSearch Serverless Access
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: !GetAtt SyllabiVectorCollection.Arn
+
+  # 4. Ingestion Lambda Function (Triggered on S3 Put)
+  IngestionLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: app.lambda_handler.s3_event_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 180
+      Events:
+        S3ObjectCreated:
+          Type: S3
+          Properties:
+            Bucket: !Ref SyllabiBucket
+            Events: s3:ObjectCreated:Put
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: careers/
+
+  # 5. Query Lambda Function (FastAPI API Gateway ASGI app)
+  QueryLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: app.lambda_handler.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        ApiGatewayRoute:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway REST Endpoint URL
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
+  S3BucketName:
+    Description: Raw Syllabus PDF Storage Bucket
+    Value: !Ref SyllabiBucket
+  OpenSearchCollectionArn:
+    Description: OpenSearch Serverless Vector Collection ARN
+    Value: !GetAtt SyllabiVectorCollection.Arn

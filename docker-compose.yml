@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - LOCAL_DEV_MODE=true
+      - API_KEY=espol-secret-api-key
+      - OLLAMA_ENDPOINT=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend/app:/app/app
+      - ./syllabus-downloader/downloads:/app/downloads
+
+  scraper:
+    build:
+      context: ./syllabus-downloader
+      dockerfile: Dockerfile
+    command: ["--carrera", "CI013", "--headless", "true"]
+    volumes:
+      - ./syllabus-downloader/downloads:/app/downloads
