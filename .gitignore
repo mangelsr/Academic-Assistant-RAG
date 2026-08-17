@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# Serverless Framework
+.serverless/
+.build/
+
+# Node / Scraper
+node_modules/
+dist/
+downloads/

@@ -1,15 +1,16 @@
-FROM python:3.11-slim
+FROM public.ecr.aws/lambda/python:3.14
 
-WORKDIR /app
+# Copy uv package manager binary from official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+# Copy project definition and uv lockfile
+COPY pyproject.toml uv.lock ${LAMBDA_TASK_ROOT}/
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install production dependencies using uv into system site-packages
+RUN uv pip install --system --no-cache -r ${LAMBDA_TASK_ROOT}/pyproject.toml
 
-COPY app/ app/
+# Copy application package
+COPY app ${LAMBDA_TASK_ROOT}/app
 
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command for Lambda execution
+CMD ["app.lambda_handler.handler"]

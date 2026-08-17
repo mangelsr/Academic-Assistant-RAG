@@ -1,0 +1,146 @@
+service: academic-assistant-rag
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 512
+  timeout: 30
+  ecr:
+    images:
+      backendImage:
+        path: ./backend
+        file: Dockerfile
+  environment:
+    AWS_REGION_NAME: ${aws:region}
+    S3_BUCKET_NAME: !Ref SyllabiBucket
+    LOCAL_DEV_MODE: 'false'
+    BEDROCK_EMBEDDING_MODEL_ID: 'amazon.titan-embed-text-v2:0'
+    BEDROCK_GENERATION_MODEL_ID: 'anthropic.claude-3-haiku-20240307-v1:0'
+    BEDROCK_COMPLEX_MODEL_ID: 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+  iam:
+    role:
+      statements:
+        # S3 Bucket permissions
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:ListBucket
+          Resource:
+            - !GetAtt SyllabiBucket.Arn
+            - !Sub '${SyllabiBucket.Arn}/*'
+        # Bedrock Model Execution permissions
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource: '*'
+        # OpenSearch Serverless Vector Access
+        - Effect: Allow
+          Action:
+            - aoss:APIAccessAll
+          Resource: !GetAtt SyllabiVectorCollection.Arn
+
+functions:
+  # Ingestion Lambda Function (Triggered on S3 Put)
+  ingestion:
+    image:
+      name: backendImage
+      command:
+        - app.lambda_handler.s3_event_handler
+    timeout: 180
+    events:
+      - s3:
+          bucket: SyllabiBucket
+          event: s3:ObjectCreated:Put
+          rules:
+            - prefix: careers/
+          existing: true
+
+  # Query Lambda Function (FastAPI API Gateway ASGI app)
+  query:
+    image:
+      name: backendImage
+      command:
+        - app.lambda_handler.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+      - http:
+          path: /
+          method: any
+
+resources:
+  Resources:
+    # 1. Raw PDF Storage S3 Bucket
+    SyllabiBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: !Sub 'espol-academic-syllabi-${AWS::AccountId}-${AWS::Region}'
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        VersioningConfiguration:
+          Status: Enabled
+
+    # 2. Amazon OpenSearch Serverless Vector Collection & Security Policies
+    VectorEncryptionPolicy:
+      Type: AWS::OpenSearchServerless::SecurityPolicy
+      Properties:
+        Name: espol-vector-enc-policy
+        Type: encryption
+        Policy: !Sub |
+          {
+            "Rules": [
+              {
+                "ResourceType": "collection",
+                "Resource": ["collection/espol-syllabi-vectors"]
+              }
+            ],
+            "AWSOwnedKey": true
+          }
+
+    VectorNetworkPolicy:
+      Type: AWS::OpenSearchServerless::SecurityPolicy
+      Properties:
+        Name: espol-vector-net-policy
+        Type: network
+        Policy: !Sub |
+          [
+            {
+              "Rules": [
+                {
+                  "ResourceType": "collection",
+                  "Resource": ["collection/espol-syllabi-vectors"]
+                },
+                {
+                  "ResourceType": "dashboard",
+                  "Resource": ["collection/espol-syllabi-vectors"]
+                }
+              ],
+              "AllowFromPublic": true
+            }
+          ]
+
+    SyllabiVectorCollection:
+      Type: AWS::OpenSearchServerless::Collection
+      DependsOn: [VectorEncryptionPolicy, VectorNetworkPolicy]
+      Properties:
+        Name: espol-syllabi-vectors
+        Type: VECTORSEARCH
+        Description: Vector store for ESPOL course syllabi and program content
+
+  Outputs:
+    ApiEndpoint:
+      Description: API Gateway REST Endpoint URL
+      Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}/'
+    S3BucketName:
+      Description: Raw Syllabus PDF Storage Bucket
+      Value: !Ref SyllabiBucket
+    OpenSearchCollectionArn:
+      Description: OpenSearch Serverless Vector Collection ARN
+      Value: !GetAtt SyllabiVectorCollection.Arn
