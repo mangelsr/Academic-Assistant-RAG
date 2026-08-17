@@ -1,59 +1,69 @@
-# Frontend
+# Academic Assistant SPA (Angular Frontend)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.4.
+Single-Page Application (SPA) for the **University Academic Assistant** RAG system, built using **Angular 19+**, **Angular Signals**, **Tailwind CSS**, and **`pnpm`**.
 
-## Development server
+---
 
-To start a local development server, run:
+## ⚡ Key Features & Technologies
 
-```bash
-ng serve
+- **Reactive State via Angular Signals**: Uses `signal()`, `computed()`, and `input()` primitives for instantaneous, lightweight state management without redundant re-renders.
+- **Package Manager**: **`pnpm`** (configured via `packageManager: pnpm@10.4.0`).
+- **Interactive RAG Chat**:
+  - Model selection toggle (Claude 3 Haiku vs Claude 3.5 Sonnet).
+  - Top-K retrieval parameter slider (1-15 chunks).
+  - Quick prompt suggestion chips for student queries.
+  - Execution latency tracking (`⚡ 348ms`).
+- **Syllabus Citation Cards**: Interactive source attribution badges showing vector similarity scores (%), course codes, course names, expandable snippets, and copyable S3 URIs.
+- **XSS-Safe DOM Sanitization**: `MarkdownSanitizePipe` wrapping Angular `DomSanitizer` to render formatted markdown response text safely.
+- **Design System**: Dark-mode glassmorphism theme, Google Fonts (*Plus Jakarta Sans* & *Inter*), custom scrollbars, and Lucide icons.
+
+---
+
+## 📂 Component Structure
+
+```
+src/app/
+├── components/
+│   ├── rag-chat/          # Main conversation view & LLM controls
+│   ├── program-selector/  # Degree program dropdown & career search
+│   └── citation-cards/    # Source attribution cards with score badges
+├── services/
+│   ├── api.service.ts     # HttpClient REST wrapper for FastAPI backend
+│   └── program-state.ts   # Angular Signals global state manager
+├── models/
+│   └── academic.models.ts # TypeScript interfaces (Query, Citation, Career)
+├── pipes/
+│   └── markdown.pipe.ts   # Safe Markdown rendering pipe
+├── environments/          # Local dev and production API base URLs
+└── styles.scss            # Tailwind CSS styling tokens
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## 🛠️ Getting Started & Commands
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### 1. Install Dependencies
 ```bash
-ng generate component component-name
+pnpm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+### 2. Start Development Server
 ```bash
-ng generate --help
+pnpm start
 ```
+Navigate to `http://localhost:4200/`. The application will automatically reload when source files change.
 
-## Building
-
-To build the project run:
-
+### 3. Build for Production
 ```bash
-ng build
+pnpm build
 ```
+Build artifacts will be stored in `dist/frontend` ready for deployment to Amazon S3 & CloudFront.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## ⚙️ Environment Configuration
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+API base URLs are managed in `src/environments/`:
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **`environment.ts`** (Development): `apiBaseUrl: 'http://localhost:8000/api/v1'`
+- **`environment.prod.ts`** (Production): `apiBaseUrl: '/api/v1'`
