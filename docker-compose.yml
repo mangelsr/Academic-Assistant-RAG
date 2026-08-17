@@ -15,12 +15,12 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./backend/app:/app/app
-      - ./syllabus-downloader/downloads:/app/downloads
+      - ./academic-scraper/downloads:/app/downloads
 
   scraper:
     build:
-      context: ./syllabus-downloader
+      context: ./academic-scraper
       dockerfile: Dockerfile
     command: ["--carrera", "CI013", "--headless", "true"]
     volumes:
-      - ./syllabus-downloader/downloads:/app/downloads
+      - ./academic-scraper/downloads:/app/downloads

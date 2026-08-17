@@ -1,8 +1,8 @@
-# ESPOL Syllabus Downloader Specification
+# ESPOL Academic Scraper Specification
 
 ## 1. Executive Summary
 
-**Syllabus Downloader** is an automated web crawler built with **TypeScript** and **Playwright (`@playwright/test` / `playwright`)** to systematically extract and download syllabus PDFs (*sílabos*) and course content PDFs (*contenido de curso*) for every degree program (*malla curricular*) hosted on ESPOL's academic portal ([mallacurricular.espol.edu.ec](https://mallacurricular.espol.edu.ec/)).
+**Academic Scraper** is an automated web crawler built with **TypeScript** and **Playwright (`@playwright/test` / `playwright`)** to systematically extract and download syllabus PDFs (*sílabos*) and course content PDFs (*contenido de curso*) for every degree program (*malla curricular*) hosted on ESPOL's academic portal ([mallacurricular.espol.edu.ec](https://mallacurricular.espol.edu.ec/)).
 
 ---
 

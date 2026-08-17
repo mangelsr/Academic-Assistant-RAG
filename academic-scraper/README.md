@@ -1,4 +1,4 @@
-# ESPOL Syllabus Downloader
+# ESPOL Academic Scraper
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.42-green.svg)](https://playwright.dev/)

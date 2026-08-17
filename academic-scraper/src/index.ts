@@ -6,8 +6,8 @@ import { CrawlOptions } from './types';
 const program = new Command();
 
 program
-  .name('espol-syllabus-downloader')
-  .description('Automated Playwright crawler to download syllabus PDFs for ESPOL degree programs')
+  .name('academic-scraper')
+  .description('Automated Playwright crawler to extract course syllabi and academic content for ESPOL degree programs')
   .version('1.0.0');
 
 program

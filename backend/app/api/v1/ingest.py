@@ -22,7 +22,7 @@ async def trigger_ingestion(
     local_path = request.local_path
     if not local_path:
         # Default local download path check
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../syllabus-downloader/downloads"))
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../academic-scraper/downloads"))
         local_path = os.path.join(base_dir, career_name)
 
     logger.info(f"[API /ingest] Initiating ingestion for career '{career_name}' at path '{local_path}'")

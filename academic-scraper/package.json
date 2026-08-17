@@ -1,7 +1,7 @@
 {
-  "name": "espol-syllabus-downloader",
+  "name": "academic-scraper",
   "version": "1.0.0",
-  "description": "Automated TypeScript Playwright crawler to download syllabus PDFs from ESPOL Malla Curricular",
+  "description": "Automated TypeScript Playwright crawler to extract course syllabi and academic content from ESPOL Malla Curricular",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
